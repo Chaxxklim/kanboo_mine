@@ -1,11 +1,11 @@
 <template>
-<div>
+  <div>
     <button class="modify-btn" @click="postModify">수정</button>
     <button class="end-btn" @click="postEnd">Project End</button>
     <button class="delete-btn" @click="postDelete">Project Delete</button>
-</div>  
+  </div>
 </template>
-    
+
 <script>
 import axios from 'axios';
 export default {
@@ -19,16 +19,18 @@ export default {
             endDate : this.$store.state.setting.endDate
           }
         }).then(res =>{
-          if(res) {
-            alert("정상적으로 수정되었습니다..");
-          }
-        }).catch(() =>{
+          console.log(res.data);
+          alert("정상적으로 수정되었습니다..");
+        }).catch(err =>{
+          console.log(err.data);
           alert("수정에 실패했습니다.");
         });
       }else{
         alert("취소했음");
       }
+
     },
+
     postDelete(){
       if(confirm("삭제할거여?")){
         axios.post('', {
@@ -36,12 +38,13 @@ export default {
             projectIdx : this.$store.state.setting.projectIdx
           }
         }).then(res =>{
-          if(res) {
-            alert("정상적으로 수정되었습니다..");
-          }
-        }).catch(() =>{
+          console.log(res.data);
+          alert("정상적으로 수정되었습니다..");
+        }).catch(err =>{
+          console.log(err.data);
           alert("수정에 실패했습니다.");
         });
+
       }else{
         alert("취소했음")
       }
@@ -53,30 +56,33 @@ export default {
             projectIdx : this.$store.state.setting.projectIdx
           }
         }).then(res =>{
-          if(res) {
-            alert("정상적으로 수정되었습니다..");
-          }
-        }).catch(() =>{
+          console.log(res.data);
+          alert("정상적으로 수정되었습니다..");
+        }).catch(err =>{
+          console.log(err.data);
           alert("수정에 실패했습니다.");
         });
+
       }else{
         alert("취소했음")
-      } 
+      }
     },
+
   }
 }
 </script>
 
 <style scoped>
 div{
+
   display :flex;
   justify-content : flex-end;
   align-items : stretch;
   flex-direction: row;
   width : 60vw;
   height : 100px;
-}
 
+}
 .modify-btn{
   background-color : #FF8906;
   width : 100px;
@@ -91,6 +97,7 @@ div{
   height : 30px;
   margin : 20px;
   border-radius : 5px;
+
 }
 
 .delete-btn{
@@ -99,5 +106,6 @@ div{
   height : 30px;
   margin : 20px;
   border-radius : 5px;
+
 }
 </style>

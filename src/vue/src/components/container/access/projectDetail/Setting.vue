@@ -45,10 +45,12 @@ export default {
     overflow-x: hidden;
     overflow-y: auto;
     width : 100vw;
-    height : calc(100vh - 70px);
+    height : 100vh;
     background-color: #16161A;
 }
 .setting-container::-webkit-scrollbar{
     display: none;
 }
 </style>
+
+<!--test-->

@@ -23,7 +23,7 @@ import requirements from '@/store/modules/main/requirements.js'
 import scheduler from '@/store/modules/main/scheduler.js'
 import setting from '@/store/modules/main/setting.js'
 import view from '@/store/modules/main/view.js'
-
+import demand from '@/store/modules/main/demand.js'
 import community from '@/store/modules/noAccess/community.js'
 import demo from '@/store/modules/noAccess/demo.js'
 import home from '@/store/modules/noAccess/home.js'
@@ -62,7 +62,8 @@ const store = createStore({
     demo,
     home,
     sign,
-    userQnA
+    userQnA,
+    demand
   }
 })
 
