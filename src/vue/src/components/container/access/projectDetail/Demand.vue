@@ -10,13 +10,15 @@
         </select>
         <button @click="save" class="addRow-btn">저장</button>
         <button @click="addRow" class="addRow-btn">추가</button>
+        <button @click="testPdf" class="addRow-btn">피뎊</button>
+        <form><input id="uploadFile" type="file" @change="uploadFile" /></form>
       </div>
     </div>
     <div class="main-bottom-div">
       <div class="demand-head">
         <DemandHead/>
       </div>
-      <div class="demand-container">
+      <div class="demand-container" id="demand-container">
         <DemandTable/>
       </div>
     </div>
@@ -26,21 +28,32 @@
 <script>
 
 import {mapMutations} from "vuex";
-
 export default {
   name : "Demand",
   components: {
     DemandTable,
     DemandHead
   },
+  data() {
+    return {
+      fileName : "파일을 선택해봐",
+
+    }
+  },
   methods: {
     ...mapMutations({
       addRow : "demand/addRow",
-      save : "demand/save"
+      save : "demand/save",
+      load : "demand/load",
+      uploadFile : "demand/uploadFile",
+      down : "demand/down",
+      testPdf : "demand/testPdf"
     }),
-    down(event){
-      console.log(event.target.value)
-    }
+
+
+  },
+  mounted() {
+    this.load()
   }
 }
 
