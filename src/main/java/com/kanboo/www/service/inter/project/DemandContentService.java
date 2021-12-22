@@ -11,8 +11,7 @@ public interface DemandContentService {
     DemandContentDTO updateDemandContent(List<DemandContentDTO> demandContentDTO);
 
 
-    void downloadExcel(Long idx, String extension);
-    void downloadPdf(Long idx, String extension);
+    void downloadExcel(Long idx);
 
     boolean importDocument(Long idx, MultipartFile file);
 }

@@ -78,9 +78,7 @@ public class DemandController {
     @PostMapping("/downDocument")
     public ResponseEntity<Resource> downloadFile(@RequestBody Map<String, String> map,
                                                  @RequestHeader("User-Agent") String userAgent) {
-        String extension = (String) map.get("extension");
-        System.out.println(extension);
-        if(extension == ".xlsx"){
+
             File f = new File("");
             String absolutePath = f.getAbsolutePath();
             String localPath = "C:\\Users\\PC\\Desktop\\LCK\\FinalProject\\kanbooFinal\\" +
@@ -88,53 +86,8 @@ public class DemandController {
             String mapIdx = (String) map.get("idx");
             String prjctNm = (String) map.get("prjctNm"); // prjctNm vue에서 받아야디ㅗ고 확장자도 받아야한다 균창아
             Long idx = Long.parseLong(mapIdx);
-            demandContentService.downloadExcel(idx, extension);
-            String fileName = prjctNm + "-" + idx + extension;
-//        String uploadFolder = "src\\main\\resources\\storage";
-            Resource resource = new FileSystemResource(localPath + "\\" +  fileName);
-
-            System.out.println("뭐노 " + absolutePath);
-            System.out.println(resource.toString());
-            //해당 파일이 없을 때
-            if (!resource.exists()) {
-                System.out.println("파일이 없누");
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-            }
-            String resourceName = resource.getFilename();
-            HttpHeaders headers = new HttpHeaders();
-
-            try {
-                String downloadName = null;
-                if(userAgent.contains("Trident")) { //IE 11
-                    downloadName = URLEncoder.encode(resourceName, "UTF-8").replaceAll("\\+", " ");
-                }else if(userAgent.contains("Edge")) {
-                    downloadName = URLEncoder.encode(resourceName, "UTF-8");
-                }else {
-                    downloadName = new String(resourceName.getBytes("UTF-8"), "ISO-8859-1");
-                }
-                headers.add("Content-disposition", "attachment;fileName=" +
-                        new String(resourceName.getBytes("UTF-8"),"ISO-8859-1"));
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-            // resource : 첨부파일 객체
-            // headers : 파일명 처리 정보
-            // ...OK : 200(성공)
-            System.out.println(fileName);
-            return new ResponseEntity<Resource>(resource, headers, HttpStatus.OK);
-        } else{
-            File f = new File("");
-            String absolutePath = f.getAbsolutePath();
-            String localPath = "C:\\Users\\PC\\Desktop\\LCK\\FinalProject\\kanbooFinal\\" +
-                    "kanboo_final\\src\\main\\resources\\storage\\demand\\pdf";
-            String mapIdx = (String) map.get("idx");
-            String prjctNm = (String) map.get("prjctNm"); // prjctNm vue에서 받아야디ㅗ고 확장자도 받아야한다 균창아
-            Long idx = Long.parseLong(mapIdx);
-            demandContentService.downloadPdf(idx, extension);
-
-
-
-            String fileName = prjctNm + "-" + idx + extension;
+            demandContentService.downloadExcel(idx);
+            String fileName = prjctNm + "-" + idx + ".xlsx";
 //        String uploadFolder = "src\\main\\resources\\storage";
             Resource resource = new FileSystemResource(localPath + "\\" +  fileName);
 
@@ -168,7 +121,6 @@ public class DemandController {
             System.out.println(fileName);
             return new ResponseEntity<Resource>(resource, headers, HttpStatus.OK);
 
-        }
 
     }
 

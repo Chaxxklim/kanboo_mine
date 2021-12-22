@@ -5,12 +5,12 @@
       <div class="modify-date-div">Last Modified Data : {{$store.state.demand.modifiedDate}}</div>
       <div class="main-top-right-div">
         <select class="download-select" @change="down($event)">
+          <option class="download-select-option" value="none">Export</option>
           <option class="download-select-option" value="PDF">PDF</option>
           <option class="download-select-option" value="Excel">Excel</option>
         </select>
         <button @click="save" class="addRow-btn">저장</button>
         <button @click="addRow" class="addRow-btn">추가</button>
-        <button @click="testPdf" class="addRow-btn">피뎊</button>
         <form><input id="uploadFile" type="file" @change="uploadFile" /></form>
       </div>
     </div>
