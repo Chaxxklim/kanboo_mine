@@ -1,17 +1,20 @@
 package com.kanboo.www.service.inter.project;
 
 import com.kanboo.www.dto.project.DemandContentDTO;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.core.io.Resource;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.List;
 
 public interface DemandContentService {
     List<DemandContentDTO> loadDemandContent(Long idx);
     DemandContentDTO getDemandContent(Long idx);
-    DemandContentDTO updateDemandContent(List<DemandContentDTO> demandContentDTO);
+    void updateDemandContent(List<DemandContentDTO> demandContentDTO);
 
+    Resource downloadExcel(Long idx);
 
-    void downloadExcel(Long idx);
+    void checkDocument(Long idx, File file) throws FileNotFoundException;
 
-    boolean importDocument(Long idx, MultipartFile file);
+    void deleteDemandContent(Long demandIdx, Long demandCnIdx);
 }

@@ -3,7 +3,6 @@ package com.kanboo.www.controller.access;
 import com.kanboo.www.dto.project.DemandContentDTO;
 import com.kanboo.www.service.inter.project.DemandContentService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -12,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.List;
@@ -24,10 +24,13 @@ public class DemandController {
     private final DemandContentService demandContentService;
 
     @PostMapping("/postRows")
-    public void updateDemandContent(@RequestBody Map<String, List<DemandContentDTO>> map){
-
+    public List<DemandContentDTO> updateDemandContent(@RequestBody Map<String, List<DemandContentDTO>> map){
+        System.out.println("post들어옴");
+        Long idx =  map.get("params").get(0).getDemand().getDemandIdx();
+        System.out.println("idx" + idx);
         List<DemandContentDTO> params = map.get("params");
         demandContentService.updateDemandContent(params);
+        return demandContentService.loadDemandContent(idx);
     }
 
     @PostMapping("/load")
@@ -38,41 +41,50 @@ public class DemandController {
         System.out.println(list.toString());
         return list;
     }
+    @PostMapping("/deleteRows")
+    public void deleteDemandContent(@RequestBody Map<String, List<DemandContentDTO>> map){
+        System.out.println(map.toString());
+        List<DemandContentDTO> params = map.get("params");
 
-//    @PostMapping("/downDocument")
-//    public void downloadExcel(@RequestBody Map<String, String> map, HttpServletResponse response) throws Exception{
-//        String extension = (String) map.get("extension");
-//        String mapIdx = (String) map.get("idx");
-//        String prjctNm = (String) map.get("prjctNm");
-//        Long idx = Long.parseLong(mapIdx);
-//
-//        demandContentService.downloadExcel(idx, extension);
-//        try {
-//            String path = "src/main/resources/storage/" + prjctNm + "-" + idx + ".xlsx";
-//
-//            File file = new File(path);
-//            response.setHeader("Content-Disposition", "attachment;filename=" + file.getName()); // 다운로드 되거나 로컬에 저장되는 용도로 쓰이는지를 알려주는 헤더
-//
-//            FileInputStream fileInputStream = new FileInputStream(path); // 파일 읽어오기
-//            OutputStream out = response.getOutputStream();
-//
-//            int read = 0;
-//            byte[] buffer = new byte[1024];
-//            while ((read = fileInputStream.read(buffer)) != -1) { // 1024바이트씩 계속 읽으면서 outputStream에 저장, -1이 나오면 더이상 읽을 파일이 없음
-//                out.write(buffer, 0, read);
-//            }
-//        } catch (Exception e){
-//            throw new Exception("download Error");
-//        }
-//    }
+        for (DemandContentDTO param : params) {
+            if (param.getDemand().getDemandIdx() != null &&
+                    param.getDemandCnIdx() != null) {
+                Long demandIdxItem = Long.parseLong(String.valueOf(param.getDemand().getDemandIdx()));
+                Long demandCnIdxItem = Long.parseLong(String.valueOf(param.getDemandCnIdx()));
+
+                System.out.println("de : " + demandIdxItem + " dc :  " + demandCnIdxItem);
+                demandContentService.deleteDemandContent(demandIdxItem, demandCnIdxItem);
+            } else {
+                System.out.println("값없음");
+            }
+        }
+    }
 
     @PostMapping("/importDocument")
-    public void importDocument(@RequestBody Map<String, String> map, MultipartFile file){
+    public ResponseEntity<?> importDocument(@ModelAttribute MultipartFile[] uploadFile, String demandIdx){
         System.out.println("임포트옴");
-        String mapIdx = (String) map.get("idx");
-        Long idx = Long.parseLong(mapIdx);
-        demandContentService.importDocument(idx, file);
+        System.out.println(demandIdx);
+//        String mapIdx = (String) map.get("idx");
+//        Long idx = Long.parseLong(mapIdx);
+        Long idx = Long.parseLong(demandIdx);
+        String uploadFolder = "C:\\Users\\PC\\Desktop\\LCK\\FinalProject\\kanbooFinal\\kanboo_final\\src\\main\\resources\\storage\\demand\\excel\\userInput";
+        File uploadPath = new File(uploadFolder);
+        for(MultipartFile multipartFile : uploadFile){
+            System.out.println("파일명 : " + multipartFile.getOriginalFilename());
+            System.out.println("파일크기 : " + multipartFile.getSize());
 
+            String uploadFileName = multipartFile.getOriginalFilename();
+            uploadFileName = uploadFileName.substring(uploadFileName.lastIndexOf("\\") + 1);
+            File saveFile = new File(uploadPath, uploadFileName);
+            try {
+                multipartFile.transferTo(saveFile);
+                demandContentService.checkDocument(idx, saveFile);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return ResponseEntity.ok("??");
     }
 
     @PostMapping("/downDocument")
@@ -86,10 +98,11 @@ public class DemandController {
             String mapIdx = (String) map.get("idx");
             String prjctNm = (String) map.get("prjctNm"); // prjctNm vue에서 받아야디ㅗ고 확장자도 받아야한다 균창아
             Long idx = Long.parseLong(mapIdx);
-            demandContentService.downloadExcel(idx);
+//            demandContentService.downloadExcel(idx);
             String fileName = prjctNm + "-" + idx + ".xlsx";
 //        String uploadFolder = "src\\main\\resources\\storage";
-            Resource resource = new FileSystemResource(localPath + "\\" +  fileName);
+//            Resource resource = new FileSystemResource(localPath + "\\" +  fileName);
+            Resource resource = demandContentService.downloadExcel(idx);
 
             System.out.println("뭐노 " + absolutePath);
             System.out.println(resource.toString());

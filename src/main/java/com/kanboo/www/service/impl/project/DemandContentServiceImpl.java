@@ -3,17 +3,23 @@ package com.kanboo.www.service.impl.project;
 import com.kanboo.www.domain.entity.project.DemandContent;
 import com.kanboo.www.domain.repository.project.DemandContentRepository;
 import com.kanboo.www.dto.project.DemandContentDTO;
+import com.kanboo.www.dto.project.DemandDTO;
+import com.kanboo.www.dto.project.ProjectDTO;
 import com.kanboo.www.service.inter.project.DemandContentService;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.*;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -40,18 +46,22 @@ public class DemandContentServiceImpl implements DemandContentService {
     }
 
     @Override
-    public DemandContentDTO updateDemandContent(List<DemandContentDTO> demandContentDTO) {
+    public void updateDemandContent(List<DemandContentDTO> demandContentDTO) {
         demandContentDTO.forEach(item -> {
             demandContentRepository.save(item.dtoToEntity());
         });
-        return null;
     }
 
     @Override
-    public void downloadExcel(Long idx) {
+    @Transactional
+    public void deleteDemandContent(Long demandIdx, Long demandCnIdx) {
+        demandContentRepository.deleteByDemandIdx(demandIdx, demandCnIdx);
+    }
+
+    @Override
+    public Resource downloadExcel(Long idx) {
         XSSFWorkbook workBook = new XSSFWorkbook();
         XSSFSheet sheet = workBook.createSheet("demand");
-        idx = Long.valueOf(1);
         List<DemandContentDTO> demandContentDTOList = new ArrayList<>();
         List<DemandContent> demandContentList = demandContentRepository.findByDemandIdx(idx);
         for(DemandContent demandContent : demandContentList){
@@ -108,82 +118,96 @@ public class DemandContentServiceImpl implements DemandContentService {
             cell = row.createCell(6);
             cell.setCellValue(demandContentDTOList.get(i).getDemandCnRm());
         }
-
         try {
-            FileOutputStream fileOutputStream = new FileOutputStream("src/main/resources/storage/"+
+            FileOutputStream fileOutputStream = new FileOutputStream("src/main/resources/storage/demand/excel/save/"+
                     demandContentDTOList.get(0).getDemand().getProject().getPrjctNm() + "-" +
                     demandContentDTOList.get(0).getDemand().getProject().getPrjctIdx() +  ".xlsx");
-            workBook.write(fileOutputStream);
+                    workBook.write(fileOutputStream);
 
         } catch (IOException e) {
             System.out.println("에러 ㅜ");
             e.printStackTrace();
         }
-
-
+        return new FileSystemResource("src/main/resources/storage/demand/excel/save/"+
+                demandContentDTOList.get(0).getDemand().getProject().getPrjctNm() + "-" +
+                demandContentDTOList.get(0).getDemand().getProject().getPrjctIdx() +  ".xlsx");
     }
 
-
+    @Transactional
     @Override
-    public boolean importDocument(Long idx, MultipartFile file) {
-        boolean flag = false;
-        List<DemandContentDTO> demandContentDTOList = new ArrayList<>();
-        List<DemandContent> demandContentList = demandContentRepository.findByDemandIdx(idx);
-
-        for(DemandContent demandContent : demandContentList){
-            demandContentDTOList.add(demandContent.entityToDto());
-        }
-        //여기에 idx 값 파일명 검사해야함
-        String userInputFileName = file.getOriginalFilename();
-
+    public void checkDocument(Long idx, File file) throws FileNotFoundException {
+        FileInputStream fis = new FileInputStream(file);
         try {
-            FileInputStream fileInputStream = new FileInputStream("src/main/resources/storage/"
-                    + userInputFileName + ".xlsx");
-            flag = true;
+            XSSFWorkbook workBook = new XSSFWorkbook(fis);
+            List<Map<Integer, String>> list = new ArrayList<Map<Integer, String>>();
+            int rowindex = 0;
+            int columnindex = 0;
+            //시트 수 (첫번째에만 존재하므로 0을 준다)
+            //만약 각 시트를 읽기위해서는 FOR문을 한번더 돌려준다
+            XSSFSheet sheet = workBook.getSheetAt(0);
+            int rows=sheet.getPhysicalNumberOfRows(); //행의 수
+            for(rowindex = 0; rowindex < rows; rowindex++){
+                Map<Integer, String> map = new HashMap<>();
+                XSSFRow row = sheet.getRow(rowindex);//행을읽는다
+                if(row !=null){
+                    int cells = row.getPhysicalNumberOfCells();//셀의 수
+                    for(columnindex = 0; columnindex <= cells; columnindex++){
 
-            try {
-                XSSFWorkbook workbook = new XSSFWorkbook((InputStream) file);
-                String sheetName = "";
-                XSSFRow row;
-                XSSFCell cell;
-                int rows = 0;
-                int cells = 0;
-                int sheetCn = workbook.getNumberOfSheets();
-
-                for (int i = 0; i < sheetCn; i++) {
-                    sheetName = workbook.getSheetName(i);
-                    XSSFSheet sheet = workbook.getSheetAt(i);
-                    rows = sheet.getPhysicalNumberOfRows();
-                    cells = sheet.getRow(i).getPhysicalNumberOfCells();
-                    for (int j = 0; j < rows; j++) {
-                        row = sheet.getRow(j);
-                        if(row != null){
-                            for (int k = 0; k < cells; k++) {
-                                cell = row.getCell(k);
-                                if(cell != null){
-                                    String value = cell.getStringCellValue();
-                                    System.out.println(value);
-
-                                } else {
-                                    System.out.println("null임");
-                                }
+                        XSSFCell cell = row.getCell(columnindex);//셀값을 읽는다
+                        String value = "";
+                        if(cell == null){//셀이 빈값일경우를 위한 널체크
+                            value = "";
+                        }else{
+                            switch (cell.getCellType()){
+                                case XSSFCell.CELL_TYPE_FORMULA:
+                                    value = cell.getCellFormula();
+                                    break;
+                                case XSSFCell.CELL_TYPE_NUMERIC:
+                                    value = cell.getNumericCellValue() + "";
+                                    break;
+                                case XSSFCell.CELL_TYPE_STRING:
+                                    value = cell.getStringCellValue() + "";
+                                    break;
+                                case XSSFCell.CELL_TYPE_BLANK:
+                                case XSSFCell.CELL_TYPE_ERROR:
+                                    value = "";
+                                    break;
                             }
-                            System.out.println("\n");
                         }
+                        System.out.println(rowindex + "번 행 : " + columnindex + "번 열 값은: "+ value);
+                        map.put(columnindex, value);
                     }
                 }
+                list.add(map);
+            }
 
-            } catch (IOException e) {
-                e.printStackTrace();
+            System.out.println("Size : " + list.size());
+            demandContentRepository.deleteDemandContentAllByDemandIdx(idx);
+            List<DemandContentDTO> demandContentDTOList = new ArrayList<>();
+            for (int i = 2; i < list.size(); i++) {
+                DemandContentDTO demandContentDTO = new DemandContentDTO();
+                demandContentDTO.setDemand(DemandDTO.builder().demandIdx(idx).build());
+                demandContentDTO.getDemand().setProject(ProjectDTO.builder().prjctIdx(idx).build());
+                demandContentDTO.setDemandCnNum(list.get(i).get(0));
+                demandContentDTO.setDemandCnSe(list.get(i).get(1));
+                demandContentDTO.setDemandCnId(list.get(i).get(2));
+                demandContentDTO.setDemandCnNm(list.get(i).get(3));
+                demandContentDTO.setDemandCnDetail(list.get(i).get(4));
+                demandContentDTO.setDemandCnRequstNm(list.get(i).get(5));
+                demandContentDTO.setDemandCnRm(list.get(i).get(6));
+                demandContentDTOList.add(demandContentDTO);
             }
 
 
-        } catch (FileNotFoundException e) {
-            System.out.println("파일음슴 ㅋㅋ 너 파일명 변경했지?ㅋㅋ");
-            e.printStackTrace();
+            demandContentDTOList.forEach(item ->{
+                demandContentRepository.save(item.dtoToEntity());
+            });
+        } catch (IOException e) {
+            System.out.println("IOException");
         }
-    return flag;
     }
+
+
 
 
 }

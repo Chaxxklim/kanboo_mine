@@ -11,7 +11,9 @@
         </select>
         <button @click="save" class="addRow-btn">저장</button>
         <button @click="addRow" class="addRow-btn">추가</button>
-        <form><input id="uploadFile" type="file" @change="uploadFile" /></form>
+        <button @click="deleteRow" class="addRow-btn">삭제</button>
+        <label for="uploadFile" class="uploadFile-label">업로드</label>
+        <input id="uploadFile" type="file" @change="uploadFile" class="uploadFile"/>
       </div>
     </div>
     <div class="main-bottom-div">
@@ -36,7 +38,6 @@ export default {
   },
   data() {
     return {
-      fileName : "파일을 선택해봐",
 
     }
   },
@@ -47,13 +48,16 @@ export default {
       load : "demand/load",
       uploadFile : "demand/uploadFile",
       down : "demand/down",
-      testPdf : "demand/testPdf"
+      deleteRow : "demand/deleteRow",
+      // testPdf : "demand/testPdf",
+      // addDefaultRow : "demand/addDefaultRow"
     }),
 
 
   },
   mounted() {
     this.load()
+    // this.addDefaultRow()
   }
 }
 
@@ -76,7 +80,7 @@ import DemandTable from '@/components/component/acess/projectDetail/demand/Deman
 }
 
 .main-top-right-div{
-  width : 200px;
+  width : 500px;
   justify-self: end;
   display: flex;
   justify-content: space-between;
@@ -123,6 +127,16 @@ import DemandTable from '@/components/component/acess/projectDetail/demand/Deman
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
 
+}
+
+.uploadFile-label{
+  background-color: gray;
+  width: 42px;
+  height: 22px;
+}
+
+.uploadFile{
+  display : none;
 }
 
 
